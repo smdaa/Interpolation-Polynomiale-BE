@@ -49,8 +49,8 @@ public class Interpolateur : MonoBehaviour
         }
 
         // Construction des échantillons
-        for (int i = 1; i <= (nbElem - 1) / pas; i++){
-            tToEval.Add(tToEval.Last() + pas);
+        for (int i = 1; i <= nbElem / pas; i++){
+            tToEval.Add(Math.Min(tToEval.Last() + pas, T.Last()));
         }
 
         return (T, tToEval);
@@ -75,8 +75,9 @@ public class Interpolateur : MonoBehaviour
         List<float> tToEval = new List<float>{0.0f};
         // local variables
         List<float> dis = new List<float>();
-        int index;
+        int temp;
 
+        // calcul des distances
         for (int i = 1; i < nbElem; ++i){
             dis.Add((float) Math.Sqrt(Math.Pow(X[i] - X[i-1], 2) + Math.Pow(Y[i] - Y[i-1], 2)));
         }
@@ -86,12 +87,15 @@ public class Interpolateur : MonoBehaviour
             T.Add(T.Last() + dis[i-1]);
         }
 
-
         // Construction des échantillons
-        for (int i = 1; i <= (nbElem - 1) / pas; ++i){
-            index = (int) (i * pas + 1);
-            tToEval.Add(T[index] + pas * index);
+        for (int i = 0; i < nbElem - 1; ++i){
+            tToEval.Add(T[i]);
+            temp = (int) (dis[i] / pas);
+            for (int j = 0; j < temp; ++j){
+                tToEval.Add(tToEval.Last() + pas);
+            }
         }
+        tToEval.Add(T.Last());
 
         return (T, tToEval);
     }
@@ -110,27 +114,36 @@ public class Interpolateur : MonoBehaviour
     (List<float>, List<float>) buildParametrisationRacineDistance(int nbElem, float pas)
     {
         // Vecteur des pas temporels
-        List<float> T = new List<float>{0.0f};
+        List<float> T = new List<float> { 0.0f };
         // Echantillonage des pas temporels
-        List<float> tToEval = new List<float>{0.0f};
+        List<float> tToEval = new List<float> { 0.0f };
         // local variables
         List<float> dis = new List<float>();
-        int index;
+        int temp;
 
-        for (int i = 1; i < nbElem; ++i){
-            dis.Add((float) Math.Sqrt(Math.Pow(X[i] - X[i-1], 2) + Math.Pow(Y[i] - Y[i-1], 2)));
+        // calcul des distances
+        for (int i = 1; i < nbElem; ++i)
+        {
+            dis.Add((float)Math.Sqrt(Math.Pow(X[i] - X[i - 1], 2) + Math.Pow(Y[i] - Y[i - 1], 2)));
         }
 
         // Construction des pas temporels
-        for (int i = 1; i < nbElem; ++i){
-            T.Add(T.Last() + (float) Math.Sqrt(dis[i-1]));
+        for (int i = 1; i < nbElem; ++i)
+        {
+            T.Add(T.Last() + (float)Math.Sqrt(dis[i - 1]));
         }
 
         // Construction des échantillons
-        for (int i = 1; i <= (nbElem - 1) / pas; ++i){
-            index = (int) (i * pas + 1);
-            tToEval.Add(T[index] + pas * index);
+        for (int i = 0; i < nbElem - 1; ++i)
+        {
+            tToEval.Add(T[i]);
+            temp = (int)(((float)Math.Sqrt(dis[i])) / pas);
+            for (int j = 0; j < temp; ++j)
+            {
+                tToEval.Add(tToEval.Last() + pas);
+            }
         }
+        tToEval.Add(T.Last());
 
         return (T, tToEval);
     }
@@ -152,12 +165,28 @@ public class Interpolateur : MonoBehaviour
         List<float> T = new List<float>();
         // Echantillonage des pas temporels
         List<float> tToEval = new List<float>();
+        // local variables
+        int temp;
 
         // Construction des pas temporels
-        // TODO !!
+        for (int i = 0; i < nbElem; ++i)
+        {
+            T.Add((float)Math.Cos(((2 * i + 1) * Math.PI) / (2 * nbElem + 2)));
+        }
+
+        Console.Write(T);
 
         // Construction des échantillons
-        // TODO !!
+        for (int i = 0; i < nbElem - 1; ++i)
+        {
+            tToEval.Add(T[i]);
+            temp = (int)((T[i+ 1] - T[i]) / pas);
+            for (int j = 0; j < temp; ++j)
+            {
+                tToEval.Add(tToEval.Last() + pas);
+            }
+        }
+        tToEval.Add(T.Last());
 
         return (T, tToEval);
     }

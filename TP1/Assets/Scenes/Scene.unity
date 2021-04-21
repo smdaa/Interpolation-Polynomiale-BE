@@ -403,7 +403,7 @@ MonoBehaviour:
   pas: 0.01
   Donnees: {fileID: 1028567248}
   InterpolationType: 0
-  ParametrisationType: 1
+  ParametrisationType: 3
   text: {fileID: 648157580}
 --- !u!1 &648157578
 GameObject:
