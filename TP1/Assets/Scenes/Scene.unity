@@ -402,8 +402,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pas: 0.01
   Donnees: {fileID: 1028567248}
-  InterpolationType: 1
-  ParametrisationType: 0
+  InterpolationType: 0
+  ParametrisationType: 2
   text: {fileID: 648157580}
 --- !u!1 &648157578
 GameObject:
@@ -772,7 +772,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1662123183
 Transform:
   m_ObjectHideFlags: 0
@@ -802,6 +802,7 @@ MonoBehaviour:
   particle: {fileID: 164310670}
   autoGenerateGrid: 1
   pas: 0.01
+  ParametrisationType: 0
 --- !u!1 &1691279622
 GameObject:
   m_ObjectHideFlags: 0

@@ -14,6 +14,8 @@ public class InterpolateurDeSurface : MonoBehaviour
     public bool autoGenerateGrid;
     public float pas;
     private List<List<Vector3>> ListePoints = new List<List<Vector3>>();
+    public enum EParametrisationType { Reguliere, Distance, RacineDistance, Tchebytcheff };
+    public EParametrisationType ParametrisationType = EParametrisationType.Reguliere;
 
     void Start()
     {
@@ -47,7 +49,9 @@ public class InterpolateurDeSurface : MonoBehaviour
                     Instantiate(particle, new Vector3(X[i, j], Hauteurs[i, j], Z[i, j]), Quaternion.identity);
                 }
             }
-        } else {
+        }
+        else
+        {
 
         }
     }
@@ -56,7 +60,18 @@ public class InterpolateurDeSurface : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            
+            List<float> T = new List<float>();
+            List<float> tToEval = new List<float>();
+
+            switch (ParametrisationType)
+            {
+                case EParametrisationType.Reguliere:
+                    (T, tToEval) = buildParametrisationReguliere(X.Count, pas);
+                    applyLagrangeParametrisation(X, Z, T, tToEval);
+                    break;
+            }
+
+
         }
     }
 
@@ -73,6 +88,64 @@ public class InterpolateurDeSurface : MonoBehaviour
                     Gizmos.DrawLine(ListePoints[j][i], ListePoints[j][i + 1]);
                 }
             }
+        }
+    }
+
+
+    private float lagrange(float x, List<float> X, List<float> Y)
+    {
+        float res = 0.0f;
+        float temp = 1.0f;
+        for (int k = 0; k < Y.Count; k++)
+        {
+            temp = 1.0f;
+            for (int i = 0; i < X.Count; i++)
+            {
+                if (i != k)
+                {
+                    temp = temp * (x - X[i]) / (X[k] - X[i]);
+                }
+            }
+            res = res + Y[k] * temp;
+        }
+        return res;
+    }
+
+    (List<float>, List<float>) buildParametrisationReguliere(int nbElem, float pas)
+    {
+        // Vecteur des pas temporels
+        List<float> T = new List<float>();
+        // Echantillonage des pas temporels
+        List<float> tToEval = new List<float>();
+
+        // Construction des pas temporels
+        for (int i = 0; i < nbElem; i++)
+        {
+            T.Add(i);
+        }
+
+        // Construction des échantillons
+        for (int i = 0; i < nbElem - 1; ++i)
+        {
+            tToEval.Add(T[i]);
+            while (tToEval.Last() < T[i + 1])
+            {
+                tToEval.Add(Math.Min(tToEval.Last() + pas, T.Last()));
+            }
+        }
+
+        return (T, tToEval);
+    }
+
+    void applyLagrangeParametrisation(float[,] X, float[,] Z, List<float> T, List<float> tToEval)
+    {
+        for (int i = 0; i < tToEval.Count; ++i)
+        {
+            // Calcul de xpoint et ypoint
+            float xpoint = lagrange(tToEval[i], T, X);
+            float ypoint = lagrange(tToEval[i], T, Y);
+            Vector3 pos = new Vector3(xpoint, 0.0f, ypoint);
+            ListePoints.Add(pos);
         }
     }
 }
