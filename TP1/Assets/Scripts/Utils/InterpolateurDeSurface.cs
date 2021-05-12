@@ -7,6 +7,8 @@ using UnityEngine.UI;
 
 public class InterpolateurDeSurface : MonoBehaviour
 {
+    /*
+    
     public GameObject particle;
     public float[,] X;
     public float[,] Hauteurs;
@@ -66,8 +68,16 @@ public class InterpolateurDeSurface : MonoBehaviour
             switch (ParametrisationType)
             {
                 case EParametrisationType.Reguliere:
-                    (T, tToEval) = buildParametrisationReguliere(X.Count, pas);
-                    applyLagrangeParametrisation(X, Z, T, tToEval);
+                    int n = X.GetLength(1);
+                    List<float> X_i = new List<float>();
+                    List<float> Z_i = new List<float>();
+                    (T, tToEval) = buildParametrisationReguliere(n, pas);
+                    for (int j = 0; j < n; ++j)
+                    {
+                        X_i.Add(X[1, j]);
+                        Z_i.Add(Z[1, j]);
+                    }
+                    applyLagrangeParametrisation(X_i, Z_i, T, tToEval);
                     break;
             }
 
@@ -90,27 +100,6 @@ public class InterpolateurDeSurface : MonoBehaviour
             }
         }
     }
-
-
-    private float lagrange(float x, List<float> X, List<float> Y)
-    {
-        float res = 0.0f;
-        float temp = 1.0f;
-        for (int k = 0; k < Y.Count; k++)
-        {
-            temp = 1.0f;
-            for (int i = 0; i < X.Count; i++)
-            {
-                if (i != k)
-                {
-                    temp = temp * (x - X[i]) / (X[k] - X[i]);
-                }
-            }
-            res = res + Y[k] * temp;
-        }
-        return res;
-    }
-
     (List<float>, List<float>) buildParametrisationReguliere(int nbElem, float pas)
     {
         // Vecteur des pas temporels
@@ -137,15 +126,36 @@ public class InterpolateurDeSurface : MonoBehaviour
         return (T, tToEval);
     }
 
-    void applyLagrangeParametrisation(float[,] X, float[,] Z, List<float> T, List<float> tToEval)
+    void applyLagrangeParametrisation(List<float> X, List<float> Y, List<float> T, List<float> tToEval)
     {
         for (int i = 0; i < tToEval.Count; ++i)
         {
             // Calcul de xpoint et ypoint
             float xpoint = lagrange(tToEval[i], T, X);
             float ypoint = lagrange(tToEval[i], T, Y);
+            flaot zpoint = 
             Vector3 pos = new Vector3(xpoint, 0.0f, ypoint);
-            ListePoints.Add(pos);
+            P2DRAW.Add(pos);
         }
     }
+    private float lagrange(float x, List<float> X, List<float> Y)
+    {
+        float res = 0.0f;
+        float temp = 1.0f;
+        for (int k = 0; k < Y.Count; k++)
+        {
+            temp = 1.0f;
+            for (int i = 0; i < X.Count; i++)
+            {
+                if (i != k)
+                {
+                    temp = temp * (x - X[i]) / (X[k] - X[i]);
+                }
+            }
+            res = res + Y[k] * temp;
+        }
+        return res;
+    }
+    */
 }
+

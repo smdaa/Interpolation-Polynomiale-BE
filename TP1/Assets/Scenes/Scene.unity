@@ -403,7 +403,7 @@ MonoBehaviour:
   pas: 0.01
   Donnees: {fileID: 1028567248}
   InterpolationType: 0
-  ParametrisationType: 2
+  ParametrisationType: 1
   text: {fileID: 648157580}
 --- !u!1 &648157578
 GameObject:
@@ -799,10 +799,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b40b34d0c13b0362828d9aa3ad0990c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  particle: {fileID: 164310670}
-  autoGenerateGrid: 1
-  pas: 0.01
-  ParametrisationType: 0
 --- !u!1 &1691279622
 GameObject:
   m_ObjectHideFlags: 0
