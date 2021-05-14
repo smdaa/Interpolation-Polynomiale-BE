@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+using System;
 
 //////////////////////////////////////////////////////////////////////////
 ///////////////// Classe qui gère l'évaluation via DCJ ///////////////////
@@ -26,8 +28,13 @@ public class DeCasteljauEvaluation : MonoBehaviour
     //////////////////////////////////////////////////////////////////////////
     List<float> buildEchantillonnage()
     {
-        List<float> tToEval = new List<float>();
-        // TODO !!
+        List<float> tToEval = new List<float>() { 0.0f };
+        int k = 0;
+        while(tToEval.Last() < 1)
+        {
+            tToEval.Add(Math.Min(1, tToEval.Last() + pas)); 
+            k = k + 1;
+        }
         return tToEval;
     }
 
@@ -44,9 +51,54 @@ public class DeCasteljauEvaluation : MonoBehaviour
     //////////////////////////////////////////////////////////////////////////
     Vector2 DeCasteljau(List<float> X, List<float> Y, float t)
     {
-        // TODO !!
-        return new Vector2(0.0f,0.0f);
+        /* version réccursive à éviter (O(2^n))
+        int n = X.Count;
+        float x = 0.0f;
+        float y = 0.0f;
+        Vector2 l1;
+        Vector2 l2;
+        if (n == 1)
+        {
+            x = X[0];
+            y = Y[0];
+        }
+        else
+        {
+            l1 = DeCasteljau(X.GetRange(0, n - 1), Y.GetRange(0, n - 1), t);
+            l2 = DeCasteljau(X.GetRange(1, n - 1), Y.GetRange(1, n - 1), t);
+            x = t * l1.x + (1 - t) * l2.x;
+            y = t * l1.y + (1 - t) * l2.y;
+        }
+        */
+
+        /* version itérative (O(n^2)) */
+        int n = X.Count;
+        float x = 0.0f;
+        float y = 0.0f;
+        float B_k_t;
+
+        for (int k = 0; k < n; k++)
+        {
+            B_k_t = (float)(KparmiN(k, n-1) * Math.Pow(1 - t, n - k - 1) * Math.Pow(t, k));
+            x = x + B_k_t * X[k];
+            y = y + B_k_t * Y[k];
+
+        }
+        return new Vector2(x, y);
     }
+
+    long KparmiN(int k, int n)
+    {
+
+        decimal result = 1;
+        for (int i = 1; i <= k; i++)
+        {
+            result *= n - (k - i);
+            result /= i;
+        }
+        return (long)result;
+    }
+
 
     //////////////////////////////////////////////////////////////////////////
     //////////////////////////// NE PAS TOUCHER //////////////////////////////

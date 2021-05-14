@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using System;
 
@@ -11,7 +12,7 @@ public class DeCasteljauSubdivision : MonoBehaviour
     // Pas d'échantillonage pour affichage
     public float pas = 1 / 100;
     // Nombre de subdivision dans l'algo de DCJ
-    public int NombreDeSubdivision = 3;
+    public int NombreDeSubdivision = 2;
     // Liste des points composant la courbe
     private List<Vector3> ListePoints = new List<Vector3>();
     // Donnees i.e. points cliqués
@@ -33,12 +34,57 @@ public class DeCasteljauSubdivision : MonoBehaviour
     //////////////////////////////////////////////////////////////////////////
     (List<float>, List<float>) DeCasteljauSub(List<float> X, List<float> Y, int nombreDeSubdivision)
     {
-        List<float> XSortie = new List<float>();
-        List<float> YSortie = new List<float>();
-        
-        // TODO !!
+        if (nombreDeSubdivision == 1)
+        {
+            //List<float> XSortie = new List<float>();
+            //List<float> YSortie = new List<float>();
 
-        return (XSortie, YSortie);
+            int n = X.Count;
+
+            List<float> Q_x = new List<float>();
+            List<float> Q_y = new List<float>();
+
+            List<float> R_x = new List<float>();
+            List<float> R_y = new List<float>();
+
+            Q_x.Add(X[0]);
+            Q_y.Add(Y[0]);
+
+            R_x.Add(X[n-1]);
+            R_y.Add(Y[n-1]);
+
+
+            for (int i = n - 2; i <= 0; i--)
+            {
+                for (int j = 0; j <= i; j++)
+                {
+                    X[j] = (float)(0.5 * X[j + 1] + 0.5 * X[j]);
+                    Y[j] = (float)(0.5 * Y[j + 1] + 0.5 * Y[j]);
+                }
+                Q_x.Add(X[0]);
+                Q_y.Add(Y[0]);
+
+                R_x.Add(X[i]);
+                R_y.Add(Y[i]);
+
+            }
+            R_x.Reverse();
+            R_y.Reverse();
+
+            print(Q_x.Count);
+            Q_x.AddRange(R_x);
+            Q_y.AddRange(R_y);
+
+
+            return (Q_x, Q_y);
+        }
+        else
+        {
+            // TODO
+            return (X, Y);
+        }
+
+        
     }
 
     //////////////////////////////////////////////////////////////////////////
