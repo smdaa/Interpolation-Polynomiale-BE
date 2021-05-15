@@ -34,57 +34,65 @@ public class DeCasteljauSubdivision : MonoBehaviour
     //////////////////////////////////////////////////////////////////////////
     (List<float>, List<float>) DeCasteljauSub(List<float> X, List<float> Y, int nombreDeSubdivision)
     {
-        if (nombreDeSubdivision == 1)
+        int n = X.Count;
+        List<float> Q_x = new List<float>();
+        List<float> Q_y = new List<float>();
+
+        List<float> R_x = new List<float>();
+        List<float> R_y = new List<float>();
+
+        Q_x.Add(X[0]);
+        Q_y.Add(Y[0]);
+
+        R_x.Add(X[n - 1]);
+        R_y.Add(Y[n - 1]);
+
+        for (int i = n - 2; i >= 0; --i)
         {
-            //List<float> XSortie = new List<float>();
-            //List<float> YSortie = new List<float>();
-
-            int n = X.Count;
-
-            List<float> Q_x = new List<float>();
-            List<float> Q_y = new List<float>();
-
-            List<float> R_x = new List<float>();
-            List<float> R_y = new List<float>();
-
+            for (int j = 0; j <= i; j++)
+            {
+                X[j] = (float)(0.5 * X[j + 1] + 0.5 * X[j]);
+                Y[j] = (float)(0.5 * Y[j + 1] + 0.5 * Y[j]);
+            }
             Q_x.Add(X[0]);
             Q_y.Add(Y[0]);
 
-            R_x.Add(X[n-1]);
-            R_y.Add(Y[n-1]);
+            R_x.Add(X[i]);
+            R_y.Add(Y[i]);
 
+        }
 
-            for (int i = n - 2; i <= 0; i--)
-            {
-                for (int j = 0; j <= i; j++)
-                {
-                    X[j] = (float)(0.5 * X[j + 1] + 0.5 * X[j]);
-                    Y[j] = (float)(0.5 * Y[j + 1] + 0.5 * Y[j]);
-                }
-                Q_x.Add(X[0]);
-                Q_y.Add(Y[0]);
+        R_x.Reverse();
+        R_y.Reverse();
 
-                R_x.Add(X[i]);
-                R_y.Add(Y[i]);
+        if (nombreDeSubdivision == 1)
+        {
+            
+            R_x.RemoveAt(0);
+            R_y.RemoveAt(0);
 
-            }
-            R_x.Reverse();
-            R_y.Reverse();
-
-            print(Q_x.Count);
             Q_x.AddRange(R_x);
             Q_y.AddRange(R_y);
-
 
             return (Q_x, Q_y);
         }
         else
         {
-            // TODO
-            return (X, Y);
+            List<float> Q1_x = new List<float>();
+            List<float> Q1_y = new List<float>();
+
+            List<float> R1_x = new List<float>();
+            List<float> R1_y = new List<float>();
+
+            (Q1_x, Q1_y) = DeCasteljauSub(Q_x, Q_y, nombreDeSubdivision - 1);
+            (R1_x, R1_y) = DeCasteljauSub(R_x, R_y, nombreDeSubdivision - 1);
+
+            Q1_x.AddRange(R1_x);
+            Q1_y.AddRange(R1_y);
+
+            return (Q1_x, Q1_y);
         }
 
-        
     }
 
     //////////////////////////////////////////////////////////////////////////
