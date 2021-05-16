@@ -35,62 +35,52 @@ public class DeCasteljauSubdivision : MonoBehaviour
     (List<float>, List<float>) DeCasteljauSub(List<float> X, List<float> Y, int nombreDeSubdivision)
     {
         int n = X.Count;
+
         List<float> Q_x = new List<float>();
         List<float> Q_y = new List<float>();
 
         List<float> R_x = new List<float>();
         List<float> R_y = new List<float>();
 
-        Q_x.Add(X[0]);
-        Q_y.Add(Y[0]);
+        List<float> Qsub_x = new List<float>();
+        List<float> Qsub_y = new List<float>();
 
-        R_x.Add(X[n - 1]);
-        R_y.Add(Y[n - 1]);
+        List<float> Rsub_x = new List<float>();
+        List<float> Rsub_y = new List<float>();
 
-        for (int i = n - 2; i >= 0; --i)
+        Q_x.Add(X[0])     ;Q_y.Add(Y[0]);
+        R_x.Add(X[n - 1]) ;R_y.Add(Y[n - 1]);
+
+        int i = n-2;
+        while (i >= 0)
         {
-            for (int j = 0; j <= i; j++)
+            int j = 0;
+            while (j <= i)
             {
-                X[j] = (float)(0.5 * X[j + 1] + 0.5 * X[j]);
-                Y[j] = (float)(0.5 * Y[j + 1] + 0.5 * Y[j]);
+                X[j] = (float)(0.5 * X[j+1] + 0.5 * X[j]);
+                Y[j] = (float)(0.5 * Y[j+1] + 0.5 * Y[j]);
+                j    = j + 1;
             }
-            Q_x.Add(X[0]);
-            Q_y.Add(Y[0]);
-
-            R_x.Add(X[i]);
-            R_y.Add(Y[i]);
-
+            Q_x.Add(X[0]); Q_y.Add(Y[0]);
+            R_x.Add(X[i]); R_y.Add(Y[i]);
+            i = i - 1;
         }
 
-        R_x.Reverse();
-        R_y.Reverse();
+        R_x.Reverse(); R_y.Reverse();
 
         if (nombreDeSubdivision == 1)
         {
-            
-            R_x.RemoveAt(0);
-            R_y.RemoveAt(0);
-
-            Q_x.AddRange(R_x);
-            Q_y.AddRange(R_y);
+            Q_x.AddRange(R_x); Q_y.AddRange(R_y);
 
             return (Q_x, Q_y);
         }
         else
         {
-            List<float> Q1_x = new List<float>();
-            List<float> Q1_y = new List<float>();
+            (Qsub_x, Qsub_y) = DeCasteljauSub(Q_x, Q_y, nombreDeSubdivision - 1);
+            (Rsub_x, Rsub_y) = DeCasteljauSub(R_x, R_y, nombreDeSubdivision - 1);
+            Qsub_x.AddRange(Rsub_x); Qsub_y.AddRange(Rsub_y);
 
-            List<float> R1_x = new List<float>();
-            List<float> R1_y = new List<float>();
-
-            (Q1_x, Q1_y) = DeCasteljauSub(Q_x, Q_y, nombreDeSubdivision - 1);
-            (R1_x, R1_y) = DeCasteljauSub(R_x, R_y, nombreDeSubdivision - 1);
-
-            Q1_x.AddRange(R1_x);
-            Q1_y.AddRange(R1_y);
-
-            return (Q1_x, Q1_y);
+            return (Qsub_x, Qsub_y);
         }
 
     }
