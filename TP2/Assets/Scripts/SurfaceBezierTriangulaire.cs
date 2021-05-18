@@ -7,6 +7,7 @@ using System;
 
 public class SurfaceBezierTriangulaire : MonoBehaviour
 {
+    /*
     // Liste des points composant la surface   
     private List<List<Vector3>> ListePoints = new List<List<Vector3>>();
     public GameObject particle;
@@ -58,49 +59,47 @@ public class SurfaceBezierTriangulaire : MonoBehaviour
         }
     }
 
-    long KparmiN(int k, int n)
+    float aux(int i, int j, int k, int n)
     {
-
-        decimal result = 1;
-        for (int i = 1; i <= k; i++)
-        {
-            result *= n - (k - i);
-            result /= i;
-        }
-        return (long)result;
+        float result = factorial(n) / (factorial(i) * factorial(j) * factorial(k));
+        return result;
     }
 
-    float Bernstein(int m, int i, float u)
+    float factorial(int n)
     {
-        float ber;
-        ber = (float)(KparmiN(i, m) * Math.Pow(1 - u, m - i) * Math.Pow(u, i));
-        return ber;
+        int result = Enumerable.Range(1, n).Aggregate(1, (p, item) => p * item);
+        return result;
     }
 
 
     Vector3 DeCasteljau(float[,] X, float[,] Hauteurs, float[,] Z, float u, float v)
     {
-        int m = 5;
         int n = 5;
         float x = 0.0f;
         float hauteur = 0.0f;
         float z = 0.0f;
 
-        for (int j = 0; j < n; j++)
+        for (int i = 0; i < n; i++)
         {
-            float B_j_n = Bernstein(n, j, v);
-            for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
             {
-                float B_i_m = Bernstein(m, i, u);
-                x = x + B_j_n * B_i_m * X[i, j];
-                z = z + B_j_n * B_i_m * Z[i, j];
-                hauteur = hauteur + B_j_n * B_i_m * Hauteurs[i, j];
+                for (int k = 0; k < n; k++)
+                {
+                    if (i + j + k == n)
+                    {
+                        float B_ijk_n = aux(i, j, k, n) * (float)Math.Pow(1 - u - v, k) * (float)Math.Pow(u, j) * (float)Math.Pow(v, i);
+                        x = x + B_ijk_n * X[i, j];
+                        z = z + B_ijk_n * Z[i, j];
+                        hauteur = hauteur + B_ijk_n * Hauteurs[i, j];
+                    }
+                }
             }
         }
+
         return new Vector3(x, hauteur, z);
     }
 
-    List<float> buildEchantillonnage2()
+    List<float> buildEchantillonnage()
     {
         List<float> tToEval = new List<float>() { 0.0f };
         int k = 0;
@@ -116,18 +115,16 @@ public class SurfaceBezierTriangulaire : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            List<float> T = buildEchantillonnage2();
+            List<float> T = buildEchantillonnage();
             int n = T.Count;
 
             Vector3 point = new Vector3();
 
-            for (int i = 0; i < n; i++)
+            foreach (float u in T)
             {
                 List<Vector3> temp = new List<Vector3>();
-                for (int j = 0; j < n-i; j++)
+                foreach (float v in T)
                 {
-                    float u = T[i];
-                    float v = T[j];
                     point = DeCasteljau(X, Hauteurs, Z, u, v);
                     temp.Add(point);
                 }
@@ -138,7 +135,7 @@ public class SurfaceBezierTriangulaire : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.black;
+        Gizmos.color = Color.blue;
         if (autoGenerateGrid)
         {
             for (int j = 0; j < ListePoints.Count; ++j)
@@ -150,5 +147,6 @@ public class SurfaceBezierTriangulaire : MonoBehaviour
             }
         }
     }
+    */
 }
 

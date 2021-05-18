@@ -60,6 +60,7 @@
      <Compile Include="Assets\Scripts\DeCasteljauEvaluation.cs" />
      <Compile Include="Assets\Scripts\DeCasteljauSubdivision.cs" />
      <Compile Include="Assets\Scripts\Points.cs" />
+     <Compile Include="Assets\Scripts\SurfaceBezierPT.cs" />
      <Compile Include="Assets\Scripts\SurfaceBezierTriangulaire.cs" />
      <Compile Include="Assets\Scripts\Zoom.cs" />
  <Reference Include="Unity.Timeline.Editor">
