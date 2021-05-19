@@ -496,7 +496,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoGenerateGrid: 1
   particle: {fileID: 1035667362}
-  NombreDeSubdivision: 10
+  NombreDeSubdivision: 7
 --- !u!1 &443151622
 GameObject:
   m_ObjectHideFlags: 0
