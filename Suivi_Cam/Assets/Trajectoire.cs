@@ -8,21 +8,24 @@ public class Trajectoire : MonoBehaviour
 {
     List<Vector3> position;
     List<Quaternion> rotation;
-    //Quaternion FocusPointRotation;
 
     int i = 0;
 
-    public enum EPosition {DeCasteljau, Spline};
-    public EPosition Position = EPosition.DeCasteljau;
+    public enum EApproximationType {DeCasteljau, Spline};
+    public EApproximationType Approximation = EApproximationType.Spline;
 
+    // degres des polynomes par morceaux
     public int degres = 5;
+    // nombre d'itération de subdivision
     public int nombreIteration = 5;
 
-    private List<Vector3> Appro_curve = new List<Vector3>();
-    private List<Quaternion> Appro_rotation = new List<Quaternion>();
+    private List<Vector3> Approximation_curve = new List<Vector3>();
+    private List<Quaternion> Interpolation_rotation = new List<Quaternion>();
 
+    // Pas d'échantillonnage 
     public float pas = 0.01f;
 
+    // Semantique : etant donnés k et n, calcule k parmi n 
     long KparmiN(int k, int n)
     {
         decimal result = 1;
@@ -34,6 +37,7 @@ public class Trajectoire : MonoBehaviour
         return (long)result;
     }
 
+    // semantique : construit un échantillonnage regulier 
     List<float> buildEchantillonnage()
     {
         List<float> tToEval = new List<float>() { 0.0f };
@@ -46,6 +50,8 @@ public class Trajectoire : MonoBehaviour
         return tToEval;
     }
 
+    // semantique : renvoie la liste des points composant la courbe         //
+    //              approximante selon un nombre de subdivision données     //
     Vector3 DeCasteljau(List<Vector3> PointsPosition, float t){
         List<float> X = new List<float>();
         List<float> Y = new List<float>();
@@ -92,6 +98,8 @@ public class Trajectoire : MonoBehaviour
         return Xsub;
     }
 
+    // semantique : réalise nombreIteration subdivision pour des polys de   //
+    //              degres degres                                           //
     List<Vector3> Subdivise(List<Vector3> PointsPosition){
         List<float> X = new List<float>();
         List<float> Y = new List<float>();
@@ -170,35 +178,31 @@ public class Trajectoire : MonoBehaviour
         rotation = new List<Quaternion>();
 
         GameObject[] Points = GameObject.FindGameObjectsWithTag("PT");
-        //GameObject[] FocusPoint = GameObject.FindGameObjectsWithTag("Focus");
 
-        foreach(GameObject go in Points){
+        List<GameObject> SortedPoints = Points.OrderBy(go=>go.name).ToList();
+
+        foreach(GameObject go in SortedPoints){
             position.Add(go.transform.position);
             rotation.Add(go.transform.rotation);
         }
+
         position.Reverse();
         rotation.Reverse();
-        foreach (Quaternion r in rotation)
-        {
-            print(r);
-        }
 
-        //FocusPointRotation = FocusPoint[0].transform.rotation;
-
-        switch (Position)
+        switch (Approximation)
         {
-            case EPosition.DeCasteljau:
+            case EApproximationType.DeCasteljau:
                 List<float> T = buildEchantillonnage();
                 List<Vector3> FinalLine = new List<Vector3>();
 
                 foreach(float t in T){
-                    Appro_curve.Add(DeCasteljau(position, t));
+                    Approximation_curve.Add(DeCasteljau(position, t));
                     FinalLine.Add(Lerp(position.Last(), position[0], t));
                 }
-                Appro_curve.AddRange(FinalLine);
+                Approximation_curve.AddRange(FinalLine);
                 break;
-            case EPosition.Spline:
-                Appro_curve = Subdivise(position);
+            case EApproximationType.Spline:
+                Approximation_curve = Subdivise(position);
                 break;
         }
 
@@ -209,15 +213,15 @@ public class Trajectoire : MonoBehaviour
             foreach(float t in T){
                 temp.Add(Quaternion.Slerp(rotation[i], rotation[i+1], t));
             }
-            Appro_rotation.AddRange(temp);   
+            Interpolation_rotation.AddRange(temp);   
         }
         
     }
 
     void OnDrawGizmosSelected(){
         Gizmos.color = Color.blue;
-        for (int i = 0; i < Appro_curve.Count - 1; ++i){
-            Gizmos.DrawLine(Appro_curve[i], Appro_curve[i + 1]);
+        for (int i = 0; i < Approximation_curve.Count - 1; ++i){
+            Gizmos.DrawLine(Approximation_curve[i], Approximation_curve[i + 1]);
         }
         Gizmos.matrix = transform.localToWorldMatrix;           // For the rotation bug
         Gizmos.DrawFrustum(transform.position, Camera.main.fieldOfView, Camera.main.nearClipPlane, Camera.main.farClipPlane, Camera.main.aspect);
@@ -226,8 +230,9 @@ public class Trajectoire : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.position = Appro_curve[i % Appro_curve.Count];
-        transform.rotation = Appro_rotation[i % Appro_rotation.Count];
+        transform.position = Approximation_curve[i % Approximation_curve.Count];
+        transform.rotation = Interpolation_rotation[i % Interpolation_rotation.Count];
+
         i++;
     }
 
