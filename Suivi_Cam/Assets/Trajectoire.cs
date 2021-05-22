@@ -6,11 +6,14 @@ using System;
 
 public class Trajectoire : MonoBehaviour
 {
+    // positions et rotations des points de controle
     List<Vector3> position;
     List<Quaternion> rotation;
 
+    // compteur pour déplacer la caméra
     int i = 0;
 
+    // choix de la méthode pour le suivi de la position approximation par DeCasteljau ou Spline
     public enum EApproximationType {DeCasteljau, Spline};
     public EApproximationType Approximation = EApproximationType.Spline;
 
@@ -19,13 +22,17 @@ public class Trajectoire : MonoBehaviour
     // nombre d'itération de subdivision
     public int nombreIteration = 5;
 
+    // postions et rotations du trajet 
     private List<Vector3> Approximation_curve = new List<Vector3>();
     private List<Quaternion> Interpolation_rotation = new List<Quaternion>();
 
     // Pas d'échantillonnage 
     public float pas = 0.01f;
 
-    // Semantique : etant donnés k et n, calcule k parmi n 
+    //////////////////////////////////////////////////////////////////////////
+    // fonction   : DeCasteljau                                             //
+    // Semantique : etant donnés k et n, calcule k parmi n                  //
+    //////////////////////////////////////////////////////////////////////////
     long KparmiN(int k, int n)
     {
         decimal result = 1;
@@ -37,8 +44,11 @@ public class Trajectoire : MonoBehaviour
         return (long)result;
     }
 
-    // semantique : construit un échantillonnage regulier 
-    List<float> buildEchantillonnage()
+    //////////////////////////////////////////////////////////////////////////
+    // fonction   : buildEchantillonnage                                    //
+    // semantique : construit un échantillonnage regulier                   //
+    //////////////////////////////////////////////////////////////////////////
+    List<float> buildEchantillonnage(float pas)
     {
         List<float> tToEval = new List<float>() { 0.0f };
         int k = 0;
@@ -50,8 +60,11 @@ public class Trajectoire : MonoBehaviour
         return tToEval;
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    // fonction   : DeCasteljau                                             //
     // semantique : renvoie la liste des points composant la courbe         //
     //              approximante selon un nombre de subdivision données     //
+    //////////////////////////////////////////////////////////////////////////
     Vector3 DeCasteljau(List<Vector3> PointsPosition, float t){
         List<float> X = new List<float>();
         List<float> Y = new List<float>();
@@ -76,6 +89,10 @@ public class Trajectoire : MonoBehaviour
 
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    // fonction   : duplicate                                               //
+    // semantique : Dupliquer les points de contrôle                        //
+    //////////////////////////////////////////////////////////////////////////
     List<float> duplicate(List<float> X)
     {
         List<float> Xres = new List<float>();
@@ -87,19 +104,25 @@ public class Trajectoire : MonoBehaviour
 
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    // fonction   : midpoints                                               //
+    // semantique : Prendre le milieu de deux points consécutifs            //
+    //////////////////////////////////////////////////////////////////////////
     List<float> midpoints(List<float> X)
     {
-        List<float> Xsub = new List<float>();
+        List<float> Xres = new List<float>();
         for (int i = 0; i < X.Count-1; i++)
         {
-            Xsub.Add(0.5f *(X[i]+ X[i+1]));
+            Xres.Add(0.5f *(X[i]+ X[i+1]));
         }
-        Xsub.Add(0.5f * (X[0] + X.Last()));
-        return Xsub;
+        Xres.Add(0.5f * (X[0] + X.Last()));
+        return Xres;
     }
-
+    //////////////////////////////////////////////////////////////////////////
+    // fonction   : Subdivise                                               //
     // semantique : réalise nombreIteration subdivision pour des polys de   //
     //              degres degres                                           //
+    //////////////////////////////////////////////////////////////////////////
     List<Vector3> Subdivise(List<Vector3> PointsPosition){
         List<float> X = new List<float>();
         List<float> Y = new List<float>();
@@ -143,42 +166,35 @@ public class Trajectoire : MonoBehaviour
         {
             Pres.Add(new Vector3(Xres[i], Yres[i], Zres[i]));
         }
-
         return Pres;
     }
 
-    Quaternion Slerp(Quaternion q1, Quaternion q2, float t){
-
-        float cos_omega = q1.x*q2.x + q1.w*q2.w + q1.y*q2.y + q1.z*q2.z;
-        if (cos_omega > 1.0f){
-            cos_omega = 1.0f;
+    //////////////////////////////////////////////////////////////////////////
+    // fonction   : SlerpMultiple                                           //
+    // semantique : réalise l’interpolation sphérique entre une liste des   //
+    //              Quaternions                                             //
+    //////////////////////////////////////////////////////////////////////////
+    Quaternion SlerpMultiple(List<Quaternion> PointsRotation, float t){
+        int n = PointsRotation.Count;
+        if (n == 1){
+            return PointsRotation[0];
+        } else {
+            Quaternion q1 = SlerpMultiple(PointsRotation.GetRange(0, n - 1), t);
+            Quaternion q2 = SlerpMultiple(PointsRotation.GetRange(1, n - 1), t);
+            return Quaternion.Slerp(q1, q2, t);
         }
-        if (cos_omega < -1.0f){
-            cos_omega = -1.0f;
-        }
-        float omega = (float) Math.Acos(cos_omega);
-        float sin_omega = (float) Math.Sqrt(1.0f - cos_omega*cos_omega);
-        float a = (float) Math.Sin((1.0 - t) * omega) / sin_omega;
-        float b = (float) Math.Sin(t * omega) / sin_omega;
-        return new Quaternion(a*q1.x + b*q2.x, a*q1.y + b*q2.y, a*q1.z + b*q2.z, a*q1.w + b*q2.w);
-
-    }
-
-    Vector3 Lerp(Vector3 p1, Vector3 p2, float t){
-        float xres = (1-t) * p1.x + t * p2.x;
-        float yres = (1-t) * p1.y + t * p2.y;
-        float zres = (1-t) * p1.z + t * p2.z;
-        return new Vector3(xres, yres, zres);        
     }
 
     // Start is called before the first frame update
     void Start()
     {
+
+        // On récupere les points de controle
         position = new List<Vector3>();
         rotation = new List<Quaternion>();
-
         GameObject[] Points = GameObject.FindGameObjectsWithTag("PT");
-
+        
+        // On fait un tri par le nom : PT1,PT2,PT3,PT4..
         List<GameObject> SortedPoints = Points.OrderBy(go=>go.name).ToList();
 
         foreach(GameObject go in SortedPoints){
@@ -186,53 +202,77 @@ public class Trajectoire : MonoBehaviour
             rotation.Add(go.transform.rotation);
         }
 
-        position.Reverse();
-        rotation.Reverse();
-
         switch (Approximation)
         {
             case EApproximationType.DeCasteljau:
-                List<float> T = buildEchantillonnage();
-                List<Vector3> FinalLine = new List<Vector3>();
+                List<float> T = buildEchantillonnage(pas);
+                // 2 * pas pour avoir une vitesse a peu pres pareil.
+                List<float> Tf = buildEchantillonnage(2 * pas);
 
                 foreach(float t in T){
                     Approximation_curve.Add(DeCasteljau(position, t));
-                    FinalLine.Add(Lerp(position.Last(), position[0], t));
+                    Interpolation_rotation.Add(SlerpMultiple(rotation, t));
                 }
-                Approximation_curve.AddRange(FinalLine);
+
+                // utile pour rendre le trajet de la caméra fermée 
+                // On fait une interpolation entre le premier et le dernier point.
+                foreach (float t in Tf)
+                {
+                    Approximation_curve.Add(Vector3.Slerp(position.Last(), position[0], t));
+                    Interpolation_rotation.Add(Quaternion.Slerp(rotation.Last(), rotation[0], t));
+                }
+
                 break;
             case EApproximationType.Spline:
+                /*
                 Approximation_curve = Subdivise(position);
-                break;
-        }
+                
+                float passub = 1 / ((Approximation_curve.Count - 1) / 2);
+                T = buildEchantillonnage(passub);
+                Tf = buildEchantillonnage(2 * passub);
 
-        for (int i = 0; i < rotation.Count - 1; i++)
-        {
-            List<float> T = buildEchantillonnage();
-            List<Quaternion> temp = new List<Quaternion>();
-            foreach(float t in T){
-                temp.Add(Quaternion.Slerp(rotation[i], rotation[i+1], t));
-            }
-            Interpolation_rotation.AddRange(temp);   
+                foreach(float t in T){
+                    Interpolation_rotation.Add(SlerpMultiple(rotation, t));
+                }
+
+                foreach (float t in Tf)
+                {
+                    Interpolation_rotation.Add(Quaternion.Slerp(rotation.Last(),rotation[0], t));
+                }
+                /*
+                for (int i = 0; i < Interpolation_rotation.Count; i++)
+                {   
+                    Interpolation_rotation[i] = Quaternion.Euler(-Interpolation_rotation[i].eulerAngles);
+                }
+                */
+                
+
+                break;
         }
         
     }
 
     void OnDrawGizmosSelected(){
         Gizmos.color = Color.blue;
+        
         for (int i = 0; i < Approximation_curve.Count - 1; ++i){
             Gizmos.DrawLine(Approximation_curve[i], Approximation_curve[i + 1]);
         }
+
         Gizmos.matrix = transform.localToWorldMatrix;           // For the rotation bug
         Gizmos.DrawFrustum(transform.position, Camera.main.fieldOfView, Camera.main.nearClipPlane, Camera.main.farClipPlane, Camera.main.aspect);
+        Debug.DrawRay(transform.position, transform.forward, Color.red, 0f, true);
     }
+
+
 
     // Update is called once per frame
     void Update()
     {
+        //print(Approximation_curve.Count);
+        //print(Interpolation_rotation.Count);
         transform.position = Approximation_curve[i % Approximation_curve.Count];
         transform.rotation = Interpolation_rotation[i % Interpolation_rotation.Count];
-
         i++;
     }
 
