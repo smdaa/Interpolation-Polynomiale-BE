@@ -519,7 +519,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Approximation: 0
-  degres: 8
+  degres: 9
   nombreIteration: 9
   pas: 0.001
 --- !u!1001 &981033681
@@ -857,7 +857,7 @@ PrefabInstance:
     - target: {fileID: 3200932388734253341, guid: f143e8b4d243d854e8eaa69d4769f911,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3200932388734253341, guid: f143e8b4d243d854e8eaa69d4769f911,
         type: 3}
@@ -877,7 +877,7 @@ PrefabInstance:
     - target: {fileID: 3200932388734253341, guid: f143e8b4d243d854e8eaa69d4769f911,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.3420201
+      value: 0.3420201
       objectReference: {fileID: 0}
     - target: {fileID: 3200932388734253341, guid: f143e8b4d243d854e8eaa69d4769f911,
         type: 3}
@@ -892,7 +892,7 @@ PrefabInstance:
     - target: {fileID: 3200932388734253341, guid: f143e8b4d243d854e8eaa69d4769f911,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: 40
+      value: -40
       objectReference: {fileID: 0}
     - target: {fileID: 3200932388734253341, guid: f143e8b4d243d854e8eaa69d4769f911,
         type: 3}

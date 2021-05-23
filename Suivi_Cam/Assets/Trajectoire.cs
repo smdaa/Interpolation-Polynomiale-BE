@@ -16,12 +16,12 @@ public class Trajectoire : MonoBehaviour
 
     // choix de la méthode pour le suivi de la position approximation par DeCasteljau ou Spline
     public enum EApproximationType {DeCasteljau, Spline};
-    public EApproximationType Approximation = EApproximationType.Spline;
+    public EApproximationType Approximation = EApproximationType.DeCasteljau;
 
     // degres des polynomes par morceaux
-    public int degres = 5;
+    public int degres = 9;
     // nombre d'itération de subdivision
-    public int nombreIteration = 5;
+    public int nombreIteration = 9;
 
     // postions et rotations du trajet 
     private List<Vector3> Approximation_curve = new List<Vector3>();
@@ -94,9 +94,9 @@ public class Trajectoire : MonoBehaviour
     // fonction   : duplicate                                               //
     // semantique : Dupliquer les points de contrôle                        //
     //////////////////////////////////////////////////////////////////////////
-    List<float> duplicate(List<float> X)
+    List<T> duplicate<T>(List<T> X)
     {
-        List<float> Xres = new List<float>();
+        List<T> Xres = new List<T>();
         for (int j = 0; j < X.Count; j++)
         {
             Xres.Add(X[j]); Xres.Add(X[j]);
@@ -171,19 +171,37 @@ public class Trajectoire : MonoBehaviour
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // fonction   : SlerpMultiple                                           //
+    // fonction   : SlerpMultipleRec                                        //
     // semantique : réalise l’interpolation sphérique entre une liste des   //
-    //              Quaternions                                             //
+    //              Quaternions version récursive                           //
     //////////////////////////////////////////////////////////////////////////
-    Quaternion SlerpMultiple(List<Quaternion> PointsRotation, float t){
+    Quaternion SlerpMultipleRec(List<Quaternion> PointsRotation, float t){
         int n = PointsRotation.Count;
         if (n == 1){
             return PointsRotation[0];
         } else {
-            Quaternion q1 = SlerpMultiple(PointsRotation.GetRange(0, n - 1), t);
-            Quaternion q2 = SlerpMultiple(PointsRotation.GetRange(1, n - 1), t);
+            Quaternion q1 = SlerpMultipleRec(PointsRotation.GetRange(0, n - 1), t);
+            Quaternion q2 = SlerpMultipleRec(PointsRotation.GetRange(1, n - 1), t);
             return Quaternion.Slerp(q1, q2, t);
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // fonction   : SlerpMultipleIter                                       //
+    // semantique : réalise l’interpolation sphérique entre une liste des   //
+    //              Quaternions version itérative                           //
+    //////////////////////////////////////////////////////////////////////////
+    Quaternion SlerpMultipleIter(List<Quaternion> PointsRotation, float t){
+        int n = PointsRotation.Count;
+        List<Quaternion> PointsRotationCopy = new List<Quaternion>(PointsRotation);
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n-i-1; j++)
+            {
+                PointsRotationCopy[j] = Quaternion.Slerp(PointsRotationCopy[j], PointsRotationCopy[j+1], t);
+            }
+        }
+        return PointsRotationCopy[0];
     }
 
     // Start is called before the first frame update
@@ -202,72 +220,33 @@ public class Trajectoire : MonoBehaviour
             position.Add(go.transform.position);
             rotation.Add(go.transform.rotation);
         }
-        rotation.Add(rotation[0]);
-        position.Add(position[0]);
 
         switch (Approximation)
         {
             case EApproximationType.DeCasteljau:
                 List<float> T = buildEchantillonnage(pas);
-                // 2 * pas pour avoir une vitesse a peu pres pareil.
-                List<float> Tf = buildEchantillonnage(2 * pas);
 
                 foreach(float t in T){
                     Approximation_curve.Add(DeCasteljau(position, t));
-                    Interpolation_rotation.Add(SlerpMultiple(rotation, t));
+                    Interpolation_rotation.Add(SlerpMultipleIter(rotation, t));
                 }
-
-                // utile pour rendre le trajet de la caméra fermée 
-                // On fait une interpolation entre le premier et le dernier point.
-                /*
-                foreach (float t in Tf)
-                {
-                    Approximation_curve.Add(Vector3.Slerp(position.Last(), position[0], t));
-                    Interpolation_rotation.Add(Quaternion.Slerp(rotation.Last(), rotation[0], t));
-                }
-                */
-
                 break;
-            case EApproximationType.Spline:
 
-                position.RemoveAt(position.Count - 1);
+            case EApproximationType.Spline:
                 Approximation_curve = Subdivise(position);
-                                
                 float passub = 1.0f / ((float)(Approximation_curve.Count - 1));
                 T = buildEchantillonnage(passub);
-
+                rotation.Add(rotation[0]);
                 foreach(float t in T){
-                    Interpolation_rotation.Add(SlerpMultiple(rotation, t));
+                    Interpolation_rotation.Add(SlerpMultipleIter(rotation, t));
                 }
-
-                /*
-                foreach (Quaternion q in Interpolation_rotation)
-                {
-                    q.LookAt();
-                }
-                foreach (float t in Tf)
-                {
-                    Interpolation_rotation.Add(Quaternion.Slerp(rotation.Last(),rotation[0], t));
-                }
-                */
-
-                //Interpolation_rotation.Reverse();
-
-                /*
-                for (int i = 0; i < Interpolation_rotation.Count; i++)
-                {   
-                    Interpolation_rotation[i] = Quaternion.Inverse(Interpolation_rotation[i]);
-                }
-                */
-                
-
                 break;
         }
         
     }
 
     void OnDrawGizmosSelected(){
-        Gizmos.color = Color.blue;
+        Gizmos.color = Color.green;
         
         for (int i = 0; i < Approximation_curve.Count - 1; ++i){
             Gizmos.DrawLine(Approximation_curve[i], Approximation_curve[i + 1]);
@@ -283,8 +262,6 @@ public class Trajectoire : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        print(Approximation_curve.Count);
-        print(Interpolation_rotation.Count);
         transform.position = Approximation_curve[i % Approximation_curve.Count];
         transform.rotation = Interpolation_rotation[i % Interpolation_rotation.Count];
         i++;
