@@ -253,7 +253,7 @@ public class Trajectoire : MonoBehaviour
         }
 
         Gizmos.matrix = transform.localToWorldMatrix;           // For the rotation bug
-        Gizmos.DrawFrustum(transform.position, Camera.main.fieldOfView, Camera.main.nearClipPlane, Camera.main.farClipPlane, Camera.main.aspect);
+        //Gizmos.DrawFrustum(transform.position, Camera.main.fieldOfView, Camera.main.nearClipPlane, Camera.main.farClipPlane, Camera.main.aspect);
         Debug.DrawRay(transform.position, transform.forward, Color.red, 0f, true);
     }
 
