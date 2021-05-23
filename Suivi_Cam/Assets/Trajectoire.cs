@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.Assertions;
 using System;
 
 public class Trajectoire : MonoBehaviour
@@ -30,7 +31,7 @@ public class Trajectoire : MonoBehaviour
     public float pas = 0.01f;
 
     //////////////////////////////////////////////////////////////////////////
-    // fonction   : DeCasteljau                                             //
+    // fonction   : KparmiN                                                 //
     // Semantique : etant donnés k et n, calcule k parmi n                  //
     //////////////////////////////////////////////////////////////////////////
     long KparmiN(int k, int n)
@@ -50,6 +51,7 @@ public class Trajectoire : MonoBehaviour
     //////////////////////////////////////////////////////////////////////////
     List<float> buildEchantillonnage(float pas)
     {
+        Assert.IsTrue(pas > 0);
         List<float> tToEval = new List<float>() { 0.0f };
         int k = 0;
         while(tToEval.Last() < 1)
@@ -86,7 +88,6 @@ public class Trajectoire : MonoBehaviour
             z = z + B * Z[k];
         }
         return new Vector3(x, y, z);
-
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -101,7 +102,6 @@ public class Trajectoire : MonoBehaviour
             Xres.Add(X[j]); Xres.Add(X[j]);
         }
         return Xres;
-
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -118,6 +118,7 @@ public class Trajectoire : MonoBehaviour
         Xres.Add(0.5f * (X[0] + X.Last()));
         return Xres;
     }
+
     //////////////////////////////////////////////////////////////////////////
     // fonction   : Subdivise                                               //
     // semantique : réalise nombreIteration subdivision pour des polys de   //
@@ -201,6 +202,8 @@ public class Trajectoire : MonoBehaviour
             position.Add(go.transform.position);
             rotation.Add(go.transform.rotation);
         }
+        rotation.Add(rotation[0]);
+        position.Add(position[0]);
 
         switch (Approximation)
         {
@@ -216,33 +219,44 @@ public class Trajectoire : MonoBehaviour
 
                 // utile pour rendre le trajet de la caméra fermée 
                 // On fait une interpolation entre le premier et le dernier point.
+                /*
                 foreach (float t in Tf)
                 {
                     Approximation_curve.Add(Vector3.Slerp(position.Last(), position[0], t));
                     Interpolation_rotation.Add(Quaternion.Slerp(rotation.Last(), rotation[0], t));
                 }
+                */
 
                 break;
             case EApproximationType.Spline:
-                /*
+
+                position.RemoveAt(position.Count - 1);
                 Approximation_curve = Subdivise(position);
-                
-                float passub = 1 / ((Approximation_curve.Count - 1) / 2);
+                                
+                float passub = 1.0f / ((float)(Approximation_curve.Count - 1));
                 T = buildEchantillonnage(passub);
-                Tf = buildEchantillonnage(2 * passub);
 
                 foreach(float t in T){
                     Interpolation_rotation.Add(SlerpMultiple(rotation, t));
                 }
 
+                /*
+                foreach (Quaternion q in Interpolation_rotation)
+                {
+                    q.LookAt();
+                }
                 foreach (float t in Tf)
                 {
                     Interpolation_rotation.Add(Quaternion.Slerp(rotation.Last(),rotation[0], t));
                 }
+                */
+
+                //Interpolation_rotation.Reverse();
+
                 /*
                 for (int i = 0; i < Interpolation_rotation.Count; i++)
                 {   
-                    Interpolation_rotation[i] = Quaternion.Euler(-Interpolation_rotation[i].eulerAngles);
+                    Interpolation_rotation[i] = Quaternion.Inverse(Interpolation_rotation[i]);
                 }
                 */
                 
@@ -269,8 +283,8 @@ public class Trajectoire : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //print(Approximation_curve.Count);
-        //print(Interpolation_rotation.Count);
+        print(Approximation_curve.Count);
+        print(Interpolation_rotation.Count);
         transform.position = Approximation_curve[i % Approximation_curve.Count];
         transform.rotation = Interpolation_rotation[i % Interpolation_rotation.Count];
         i++;
