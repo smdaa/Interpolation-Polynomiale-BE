@@ -31,21 +31,6 @@ public class Trajectoire : MonoBehaviour
     public float pas = 0.01f;
 
     //////////////////////////////////////////////////////////////////////////
-    // fonction   : KparmiN                                                 //
-    // Semantique : etant donnés k et n, calcule k parmi n                  //
-    //////////////////////////////////////////////////////////////////////////
-    long KparmiN(int k, int n)
-    {
-        decimal result = 1;
-        for (int i = 1; i <= k; i++)
-        {
-            result *= n - (k - i);
-            result /= i;
-        }
-        return (long)result;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
     // fonction   : buildEchantillonnage                                    //
     // semantique : construit un échantillonnage regulier                   //
     //////////////////////////////////////////////////////////////////////////
@@ -66,8 +51,9 @@ public class Trajectoire : MonoBehaviour
     // fonction   : DeCasteljau                                             //
     // semantique : renvoie la liste des points composant la courbe         //
     //              approximante selon un nombre de subdivision données     //
+    //              version itérative                                       //
     //////////////////////////////////////////////////////////////////////////
-    Vector3 DeCasteljau(List<Vector3> PointsPosition, float t){
+    Vector3 DeCasteljauIter(List<Vector3> PointsPosition, float t){
         List<float> X = new List<float>();
         List<float> Y = new List<float>();
         List<float> Z = new List<float>();
@@ -81,15 +67,35 @@ public class Trajectoire : MonoBehaviour
             Z.Add(v.z);
         }
         int n = PointsPosition.Count;
-        for (int k = 0; k < n; k++){
-            B = (float)(KparmiN(k, n-1) * Math.Pow(1 - t, n - k - 1) * Math.Pow(t, k));
-            x = x + B * X[k];
-            y = y + B * Y[k];
-            z = z + B * Z[k];
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n-i-1; j++)
+            {
+                X[j] = (1 - t) * X[j] + t * X[j+1];
+                Y[j] = (1 - t) * Y[j] + t * Y[j+1];
+                Z[j] = (1 - t) * Z[j] + t * Z[j+1];
+            }
+
         }
-        return new Vector3(x, y, z);
+        return new Vector3(X[0], Y[0], Z[0]);
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    // fonction   : DeCasteljau                                             //
+    // semantique : renvoie la liste des points composant la courbe         //
+    //              approximante selon un nombre de subdivision données     //
+    //              version itérative                                       //
+    //////////////////////////////////////////////////////////////////////////
+    Vector3 DeCasteljauRec(List<Vector3> PointsPosition, float t){
+        int n = PointsPosition.Count;
+        if (n==1){
+            return PointsPosition[0];
+        } else {
+            Vector3 p1 = DeCasteljauRec(PointsPosition.GetRange(0, n - 1), t);
+            Vector3 p2 = DeCasteljauRec(PointsPosition.GetRange(1, n - 1), t);
+            return Vector3.Lerp(p1, p2, t);
+        }
+    }
     //////////////////////////////////////////////////////////////////////////
     // fonction   : duplicate                                               //
     // semantique : Dupliquer les points de contrôle                        //
@@ -227,7 +233,7 @@ public class Trajectoire : MonoBehaviour
                 List<float> T = buildEchantillonnage(pas);
 
                 foreach(float t in T){
-                    Approximation_curve.Add(DeCasteljau(position, t));
+                    Approximation_curve.Add(DeCasteljauIter(position, t));
                     Interpolation_rotation.Add(SlerpMultipleIter(rotation, t));
                 }
                 break;
